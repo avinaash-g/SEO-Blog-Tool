@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#49D0CD" />
+      <stop offset="60%" stop-color="#1FA2A4" />
+      <stop offset="100%" stop-color="#0E7882" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(25, 10)">
+    
+    <text x="300" y="90" 
+          font-family="'Playfair Display', 'Georgia', 'Times New Roman', serif" 
+          font-size="68" 
+          font-weight="700" 
+          letter-spacing="-1"
+          text-anchor="middle"
+          fill="#113B43">Authenura</text>
+
+    <path d="M 125,110 
+             C 200,110 250,140 370,115 
+             C 435,98 500,120 540,128
+             C 460,135 355,105 250,133
+             C 185,150 140,122 125,110 Z" 
+          fill="url(#cyanGradient)" />
+          
+    <path d="M 195,133 
+             C 275,133 340,163 460,133
+             C 340,152 265,141 195,133 Z" 
+          fill="#113B43" opacity="0.8"/>
+
+    <text x="325" y="172" 
+          font-family="'Montserrat', 'Helvetica', 'Arial', sans-serif" 
+          font-size="19" 
+          font-weight="500" 
+          letter-spacing="4" 
+          text-anchor="middle" 
+          fill="#15464F">Code. Create. Innovate.</text>
+  </g>
+</svg>
