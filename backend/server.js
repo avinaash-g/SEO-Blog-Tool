@@ -46,7 +46,6 @@ const sendWelcomeEmail = async (toEmail) => {
   }
 };
 
-// --- User Schema ---
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -56,9 +55,6 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 
-// ==================== AUTH ROUTING APIS ====================
-
-// CHANGED FROM '/api/auth/signup' TO '/api/auth/register' TO FIX THE 404 ERROR
 app.post('/api/auth/register', async (req, res) => {
   const { email, password } = req.body;
 
