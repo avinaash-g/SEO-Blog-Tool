@@ -1,464 +1,482 @@
 "use client";
 
-
-
 import { useState } from "react";
-
 import Link from "next/link";
-
-import { Eye, EyeOff, ArrowRight, Zap } from "lucide-react";
-
-
-
-const orbStyles = `
-
-  .auth-orb {
-
-    position: absolute;
-
-    border-radius: 9999px;
-
-    filter: blur(80px);
-
-    animation: authFloat 8s ease-in-out infinite;
-
-  }
-
-  .auth-orb-1 { width: 400px; height: 400px; top: -100px; right: -80px; animation-delay: 0s; }
-
-  .auth-orb-2 { width: 300px; height: 300px; bottom: -80px; left: -60px; animation-delay: -3s; }
-
-  .auth-orb-3 { width: 200px; height: 200px; top: 40%; left: 30%; animation-delay: -5s; }
-
-  @keyframes authFloat {
-
-    0%, 100% { transform: translateY(0px) scale(1); }
-
-    33%       { transform: translateY(-20px) scale(1.03); }
-
-    66%       { transform: translateY(10px) scale(0.97); }
-
-  }
-
-`;
-
-
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, ArrowRight, Zap, LogIn, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
-
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [showPassword, setShowPassword] = useState(false);
-
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
-
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const [focusedField, setFocusedField] = useState<string | null>(null);
-
-
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
-
     setIsLoading(true);
+    setError(null);
 
-    // Connect your auth logic here
+    const endpoint = activeTab === "signin" ? "/api/auth/login" : "/api/auth/register";
+    const payload = activeTab === "signin" ? { email, password } : { name, email, password };
 
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    setIsLoading(false);
+      const data = await response.json();
 
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Authentication failed.");
+      }
+
+      localStorage.setItem("token", data.token);
+      router.push("/tools");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected server error occurred.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-
-
   const inputWrap = (field: string) =>
-
-    `relative rounded-xl border transition-all duration-200 bg-white dark:bg-gray-900 ${
-
+    `relative rounded-xl border transition-all duration-200 bg-gray-50 dark:bg-gray-900 ${
       focusedField === field
-
-        ? "border-violet-500 dark:border-[#A6FF5B] shadow-[0_0_0_3px_rgba(139,92,246,0.15)] dark:shadow-[0_0_0_3px_rgba(166,255,91,0.12)]"
-
+        ? "border-violet-600 ring-2 ring-violet-600/10 dark:border-violet-400"
         : "border-gray-200 dark:border-gray-700"
-
     }`;
 
-
-
   return (
-
-    <>
-
-      <style dangerouslySetInnerHTML={{ __html: orbStyles }} />
-
-
-
-      <div className="min-h-screen flex bg-white dark:bg-[#0a0a0a] transition-colors duration-500">
-
-        {/* ── Left Brand Panel ── */}
-
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-violet-600 dark:bg-[#0d0d0d] flex-col items-center justify-center p-12">
-
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
-            <div className="auth-orb auth-orb-1 bg-violet-400/40 dark:bg-[#A6FF5B]/20" />
-
-            <div className="auth-orb auth-orb-2 bg-violet-800/30 dark:bg-[#A6FF5B]/10" />
-
-            <div className="auth-orb auth-orb-3 bg-white/10 dark:bg-[#A6FF5B]/15" />
-
-            <svg className="absolute inset-0 w-full h-full opacity-10 dark:opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
-
-              <defs>
-
-                <pattern id="login-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-
-                  <path d="M 48 0 L 0 0 0 48" fill="none" stroke="white" strokeWidth="0.5" />
-
-                </pattern>
-
-              </defs>
-
-              <rect width="100%" height="100%" fill="url(#login-grid)" />
-
-            </svg>
-
-          </div>
-
-
-
-          <div className="relative z-10 text-white dark:text-[#A6FF5B] max-w-sm text-center space-y-8">
-
-            <div className="flex items-center justify-center gap-2">
-
-              <div className="w-10 h-10 rounded-xl bg-white/20 dark:bg-[#A6FF5B]/20 flex items-center justify-center backdrop-blur-sm">
-
-                <Zap size={20} className="text-white dark:text-[#A6FF5B] fill-current" />
-
-              </div>
-
-              <span className="text-xl font-bold tracking-tight">YourBrand</span>
-
-            </div>
-
-
-
-            <div className="space-y-3">
-
-              <h1 className="text-4xl font-extrabold leading-tight tracking-tight">
-
-                Welcome<br />back.
-
-              </h1>
-
-              <p className="text-white/70 dark:text-[#A6FF5B]/60 text-base leading-relaxed">
-
-                Sign in to pick up exactly where you left off. Everything is waiting for you.
-
-              </p>
-
-            </div>
-
-
-
-            <div className="bg-white/10 dark:bg-[#A6FF5B]/10 backdrop-blur-sm rounded-2xl p-5 text-left border border-white/20 dark:border-[#A6FF5B]/20">
-
-              <p className="text-sm text-white/90 dark:text-[#A6FF5B]/80 leading-relaxed italic">
-
-                &ldquo;This platform completely changed how our team works. The speed is unreal.&rdquo;
-
-              </p>
-
-              <div className="flex items-center gap-3 mt-4">
-
-                <div className="w-8 h-8 rounded-full bg-violet-400 dark:bg-[#A6FF5B]/30 flex items-center justify-center text-xs font-bold text-white dark:text-[#A6FF5B]">
-
-                  AK
-
-                </div>
-
-                <div>
-
-                  <p className="text-xs font-semibold text-white dark:text-[#A6FF5B]">Arjun K.</p>
-
-                  <p className="text-xs text-white/50 dark:text-[#A6FF5B]/40">Product Lead, Acme Inc</p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
+    <div className="min-h-screen relative flex items-center justify-center bg-[#F9FAFB] dark:bg-[#08080A] p-4 transition-colors duration-300 overflow-hidden">
+      
+      {/* ── STATIC BACKGROUND ENHANCEMENTS LAYER ── */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        
+        {/* -- Light Mode Static Blobs -- */}
+        <div className="dark:hidden">
+          {/* Top Right (shifting to center) - Soft Violet */}
+          <div className="absolute -top-20 -right-20 w-[600px] h-[600px] rounded-full bg-violet-200/50 blur-[120px]" />
+          
+          {/* Bottom Left (shifting to center) - Gentle Pink */}
+          <div className="absolute -bottom-40 -left-20 w-[700px] h-[700px] rounded-full bg-pink-100/60 blur-[140px]" />
         </div>
 
+        {/* -- Dark Mode Static Blobs -- */}
+        <div className="hidden dark:block">
+          {/* Top Right (shifting to center) - Deep Indigo */}
+          <div className="absolute -top-32 -right-10 w-[550px] h-[550px] rounded-full bg-indigo-950/50 blur-[110px]" />
+          
+          {/* Bottom Left (shifting to center) - Subtle Slate */}
+          <div className="absolute -bottom-40 -left-10 w-[650px] h-[650px] rounded-full bg-slate-900/40 blur-[130px]" />
+        </div>
+      </div>
 
-
-        {/* ── Right Form Panel ── */}
-
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
-
-          <div className="w-full max-w-md space-y-8">
-
-            {/* Mobile logo */}
-
-            <div className="flex items-center gap-2 lg:hidden">
-
-              <div className="w-9 h-9 rounded-xl bg-violet-600 dark:bg-[#A6FF5B] flex items-center justify-center">
-
-                <Zap size={18} className="text-white dark:text-black fill-current" />
-
-              </div>
-
-              <span className="text-lg font-bold text-gray-900 dark:text-white">YourBrand</span>
-
+      {/* ── Central Login Workspace Card ── */}
+      <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-[#101014]/90 rounded-2xl border border-gray-200/70 dark:border-zinc-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-sm flex overflow-hidden min-h-[500px] transition-all duration-300">
+        
+        {/* ── Internal Mini Sidebar Navigation ── */}
+        <div className="w-20 sm:w-24 bg-gray-50/70 dark:bg-[#141419]/80 border-r border-gray-100 dark:border-zinc-800/60 flex flex-col items-center justify-between py-6 flex-shrink-0">
+          <div className="flex flex-col items-center gap-8 w-full">
+            {/* Logo */}
+            <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center shadow-md shadow-violet-600/10 hover:scale-105 transition-transform cursor-pointer">
+              <Zap size={18} className="text-white fill-current" />
             </div>
 
-
-
-            <div className="space-y-1">
-
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Sign in</h2>
-
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-
-                Don&apos;t have an account?{" "}
-
-                <Link href="/signup" className="text-violet-600 dark:text-[#A6FF5B] font-semibold hover:underline underline-offset-2">
-
-                  Create one free
-
-                </Link>
-
-              </p>
-
-            </div>
-
-
-
-            {/* Social buttons */}
-
-            <div className="grid grid-cols-2 gap-3">
-
-              {["Google", "GitHub"].map((provider) => (
-
-                <button
-
-                  key={provider}
-
-                  type="button"
-
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm font-medium hover:border-violet-400 dark:hover:border-[#A6FF5B]/60 hover:bg-violet-50 dark:hover:bg-[#A6FF5B]/5 transition-all duration-200"
-
-                >
-
-                  {provider === "Google" ? (
-
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-
-                    </svg>
-
-                  ) : (
-
-                    <svg className="w-4 h-4 fill-current text-gray-800 dark:text-white" viewBox="0 0 24 24">
-
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-
-                    </svg>
-
-                  )}
-
-                  {provider}
-
-                </button>
-
-              ))}
-
-            </div>
-
-
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-
-              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">or continue with email</span>
-
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-
-            </div>
-
-
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              {/* Email */}
-
-              <div className="space-y-1.5">
-
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-
-                <div className={inputWrap("email")}>
-
-                  <input
-
-                    type="email"
-
-                    value={email}
-
-                    onChange={(e) => setEmail(e.target.value)}
-
-                    onFocus={() => setFocusedField("email")}
-
-                    onBlur={() => setFocusedField(null)}
-
-                    placeholder="you@example.com"
-
-                    required
-
-                    className="w-full px-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm rounded-xl outline-none"
-
-                  />
-
-                </div>
-
-              </div>
-
-
-
-              {/* Password */}
-
-              <div className="space-y-1.5">
-
-                <div className="flex items-center justify-between">
-
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-
-                  <Link href="/forgot-password" className="text-xs text-violet-600 dark:text-[#A6FF5B] hover:underline underline-offset-2">
-
-                    Forgot password?
-
-                  </Link>
-
-                </div>
-
-                <div className={inputWrap("password")}>
-
-                  <input
-
-                    type={showPassword ? "text" : "password"}
-
-                    value={password}
-
-                    onChange={(e) => setPassword(e.target.value)}
-
-                    onFocus={() => setFocusedField("password")}
-
-                    onBlur={() => setFocusedField(null)}
-
-                    placeholder="••••••••"
-
-                    required
-
-                    className="w-full px-4 py-3 pr-12 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm rounded-xl outline-none"
-
-                  />
-
-                  <button
-
-                    type="button"
-
-                    onClick={() => setShowPassword(!showPassword)}
-
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-
-                  >
-
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-
-                  </button>
-
-                </div>
-
-              </div>
-
-
-
-              {/* Submit */}
-
+            {/* Navigation Tabs */}
+            <nav className="flex flex-col gap-3 w-full px-2 sm:px-3">
               <button
-
-                type="submit"
-
-                disabled={isLoading}
-
-                className="relative w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 bg-violet-600 hover:bg-violet-700 dark:bg-[#A6FF5B] dark:hover:bg-[#8fe63e] text-white dark:text-black shadow-lg shadow-violet-200 dark:shadow-[#A6FF5B]/20 disabled:opacity-60 disabled:cursor-not-allowed group overflow-hidden"
-
+                type="button"
+                onClick={() => { setActiveTab("signin"); setError(null); }}
+                className={`flex flex-col items-center justify-center gap-1 py-3 w-full rounded-xl text-[10px] font-medium transition-all ${
+                  activeTab === "signin"
+                    ? "bg-white dark:bg-zinc-800/90 text-violet-600 dark:text-violet-400 shadow-xs border border-gray-100 dark:border-zinc-700/50"
+                    : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300"
+                }`}
               >
-
-                <span className={`flex items-center justify-center gap-2 transition-all duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}>
-
-                  Sign in
-
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
-
-                </span>
-
-                {isLoading && (
-
-                  <span className="absolute inset-0 flex items-center justify-center">
-
-                    <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-
-                    </svg>
-
-                  </span>
-
-                )}
-
+                <LogIn size={18} />
+                <span>Sign In</span>
               </button>
 
-            </form>
-
-
-
-            <p className="text-center text-xs text-gray-400 dark:text-gray-600">
-
-              By signing in you agree to our{" "}
-
-              <Link href="/terms" className="underline underline-offset-2 hover:text-violet-600 dark:hover:text-[#A6FF5B]">Terms</Link>
-
-              {" "}&amp;{" "}
-
-              <Link href="/privacy" className="underline underline-offset-2 hover:text-violet-600 dark:hover:text-[#A6FF5B]">Privacy</Link>
-
-            </p>
-
+              <button
+                type="button"
+                onClick={() => { setActiveTab("signup"); setError(null); }}
+                className={`flex flex-col items-center justify-center gap-1 py-3 w-full rounded-xl text-[10px] font-medium transition-all ${
+                  activeTab === "signup"
+                    ? "bg-white dark:bg-zinc-800/90 text-violet-600 dark:text-violet-400 shadow-xs border border-gray-100 dark:border-zinc-700/50"
+                    : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300"
+                }`}
+              >
+                <UserPlus size={18} />
+                <span>Sign Up</span>
+              </button>
+            </nav>
           </div>
 
+          <span className="text-[10px] text-gray-300 dark:text-zinc-700 font-semibold tracking-wider uppercase transform -rotate-90 sm:rotate-0">
+            
+          </span>
+        </div>
+
+        {/* ── Dynamic Form Panel ── */}
+        <div className="flex-1 p-6 sm:p-10 flex flex-col justify-center bg-white/50 dark:bg-transparent">
+          <div className="space-y-1 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {activeTab === "signin" ? "Welcome back" : "Get started"}
+            </h2>
+            <p className="text-gray-500 dark:text-zinc-400 text-sm">
+              {activeTab === "signin" 
+                ? "Sign in to your Toolverse workspace." 
+                : "Create your account to start building."}
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-medium">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name (Only shows up during Sign Up) */}
+            {activeTab === "signup" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Full Name</label>
+                <div className={inputWrap("name")}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Alex Carter"
+                    required={activeTab === "signup"}
+                    className="w-full px-4 py-2.5 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Email address</label>
+              <div className={inputWrap("email")}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full px-4 py-2.5 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Password</label>
+                {activeTab === "signin" && (
+                  <Link href="/forgot-password" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 hover:underline">
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
+              <div className={inputWrap("password")}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full px-4 py-2.5 pr-12 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="relative w-full py-3 mt-2 rounded-xl font-medium text-sm transition-all bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-violet-600/15 hover:shadow-violet-600/20 active:scale-[0.98]"
+            >
+              {isLoading ? (
+                <svg className="w-5 h-5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <>
+                  {activeTab === "signin" ? "Sign in" : "Create account"}
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Micro Footer */}
+          <p className="text-center text-[11px] text-gray-400 dark:text-zinc-600 mt-6">
+            By continuing, you agree to our{" "}
+            <Link href="/terms" className="underline hover:text-gray-600 dark:hover:text-zinc-300 transition-colors">Terms</Link>
+            {" "}&amp;{" "}
+            <Link href="/privacy" className="underline hover:text-gray-600 dark:hover:text-zinc-300 transition-colors">Privacy</Link>
+          </p>
         </div>
 
       </div>
-
-    </>
-
+    </div>
   );
-
 }
+// "use client";
+
+// import { useState } from "react";
+// import Link from "next/link";
+// import { useRouter } from "next/navigation";
+// import { Eye, EyeOff, ArrowRight, Zap, LogIn, UserPlus } from "lucide-react";
+
+// export default function LoginPage() {
+//   const router = useRouter();
+//   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [name, setName] = useState("");
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [focusedField, setFocusedField] = useState<string | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setIsLoading(true);
+//     setError(null);
+
+//     const endpoint = activeTab === "signin" ? "/api/auth/login" : "/api/auth/register";
+//     const payload = activeTab === "signin" ? { email, password } : { name, email, password };
+
+//     try {
+//       const response = await fetch(`http://localhost:5000${endpoint}`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//       });
+
+//       const data = await response.json();
+
+//       if (!response.ok || !data.success) {
+//         throw new Error(data.message || "Authentication failed.");
+//       }
+
+//       localStorage.setItem("token", data.token);
+//       router.push("/tools");
+//     } catch (err: unknown) {
+//       if (err instanceof Error) {
+//         setError(err.message);
+//       } else {
+//         setError("An unexpected server error occurred.");
+//       }
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   const inputWrap = (field: string) =>
+//     `relative rounded-xl border transition-all duration-200 bg-gray-50 dark:bg-gray-900 ${
+//       focusedField === field
+//         ? "border-violet-600 ring-2 ring-violet-600/10 dark:border-violet-400"
+//         : "border-gray-200 dark:border-gray-700"
+//     }`;
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] p-4 transition-colors duration-300">
+//       <div className="w-full max-w-2xl bg-white dark:bg-[#121212] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex overflow-hidden min-h-[500px]">
+        
+//         {/* ── Internal Mini Sidebar Navigation ── */}
+//         <div className="w-20 sm:w-24 bg-gray-50 dark:bg-[#181818] border-r border-gray-100 dark:border-gray-800 flex flex-col items-center justify-between py-6 flex-shrink-0">
+//           <div className="flex flex-col items-center gap-8 w-full">
+//             {/* Logo */}
+//             <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center shadow-sm">
+//               <Zap size={18} className="text-white fill-current" />
+//             </div>
+
+//             {/* Navigation Tabs */}
+//             <nav className="flex flex-col gap-3 w-full px-2 sm:px-3">
+//               <button
+//                 type="button"
+//                 onClick={() => { setActiveTab("signin"); setError(null); }}
+//                 className={`flex flex-col items-center justify-center gap-1 py-3 w-full rounded-xl text-[10px] font-medium transition-all ${
+//                   activeTab === "signin"
+//                     ? "bg-white dark:bg-gray-800 text-violet-600 dark:text-violet-400 shadow-sm border border-gray-100 dark:border-gray-700"
+//                     : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+//                 }`}
+//               >
+//                 <LogIn size={18} />
+//                 <span>Sign In</span>
+//               </button>
+
+//               <button
+//                 type="button"
+//                 onClick={() => { setActiveTab("signup"); setError(null); }}
+//                 className={`flex flex-col items-center justify-center gap-1 py-3 w-full rounded-xl text-[10px] font-medium transition-all ${
+//                   activeTab === "signup"
+//                     ? "bg-white dark:bg-gray-800 text-violet-600 dark:text-violet-400 shadow-sm border border-gray-100 dark:border-gray-700"
+//                     : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+//                 }`}
+//               >
+//                 <UserPlus size={18} />
+//                 <span>Sign Up</span>
+//               </button>
+//             </nav>
+//           </div>
+
+//           <span className="text-[10px] text-gray-300 dark:text-gray-600 font-semibold tracking-wider uppercase transform -rotate-90 sm:rotate-0">
+//             V1.0
+//           </span>
+//         </div>
+
+//         {/* ── Dynamic Form Panel ── */}
+//         <div className="flex-1 p-6 sm:p-10 flex flex-col justify-center">
+//           <div className="space-y-1 mb-6">
+//             <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+//               {activeTab === "signin" ? "Welcome back" : "Get started"}
+//             </h2>
+//             <p className="text-gray-500 dark:text-gray-400 text-sm">
+//               {activeTab === "signin" 
+//                 ? "Sign in to your Toolverse workspace." 
+//                 : "Create your account to start building."}
+//             </p>
+//           </div>
+
+//           {/* Error Display */}
+//           {error && (
+//             <div className="mb-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-medium">
+//               {error}
+//             </div>
+//           )}
+
+//           <form onSubmit={handleSubmit} className="space-y-4">
+//             {/* Full Name (Only shows up during Sign Up) */}
+//             {activeTab === "signup" && (
+//               <div className="space-y-1.5">
+//                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+//                 <div className={inputWrap("name")}>
+//                   <input
+//                     type="text"
+//                     value={name}
+//                     onChange={(e) => setName(e.target.value)}
+//                     onFocus={() => setFocusedField("name")}
+//                     onBlur={() => setFocusedField(null)}
+//                     placeholder="Alex Carter"
+//                     required={activeTab === "signup"}
+//                     className="w-full px-4 py-2.5 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+//                   />
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* Email */}
+//             <div className="space-y-1.5">
+//               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+//               <div className={inputWrap("email")}>
+//                 <input
+//                   type="email"
+//                   value={email}
+//                   onChange={(e) => setEmail(e.target.value)}
+//                   onFocus={() => setFocusedField("email")}
+//                   onBlur={() => setFocusedField(null)}
+//                   placeholder="you@example.com"
+//                   required
+//                   className="w-full px-4 py-2.5 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+//                 />
+//               </div>
+//             </div>
+
+//             {/* Password */}
+//             <div className="space-y-1.5">
+//               <div className="flex items-center justify-between">
+//                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+//                 {activeTab === "signin" && (
+//                   <Link href="/forgot-password" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:underline">
+//                     Forgot password?
+//                   </Link>
+//                 )}
+//               </div>
+//               <div className={inputWrap("password")}>
+//                 <input
+//                   type={showPassword ? "text" : "password"}
+//                   value={password}
+//                   onChange={(e) => setPassword(e.target.value)}
+//                   onFocus={() => setFocusedField("password")}
+//                   onBlur={() => setFocusedField(null)}
+//                   placeholder="••••••••"
+//                   required
+//                   className="w-full px-4 py-2.5 pr-12 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm rounded-xl outline-none"
+//                 />
+//                 <button
+//                   type="button"
+//                   onClick={() => setShowPassword(!showPassword)}
+//                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+//                 >
+//                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+//                 </button>
+//               </div>
+//             </div>
+
+//             {/* Submit Button */}
+//             <button
+//               type="submit"
+//               disabled={isLoading}
+//               className="relative w-full py-3 mt-2 rounded-xl font-medium text-sm transition-colors bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white disabled:cursor-not-allowed flex items-center justify-center gap-2"
+//             >
+//               {isLoading ? (
+//                 <svg className="w-5 h-5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+//                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+//                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+//                 </svg>
+//               ) : (
+//                 <>
+//                   {activeTab === "signin" ? "Sign in" : "Create account"}
+//                   <ArrowRight size={16} />
+//                 </>
+//               )}
+//             </button>
+//           </form>
+
+//           {/* Micro Footer */}
+//           <p className="text-center text-[11px] text-gray-400 dark:text-gray-500 mt-6">
+//             By continuing, you agree to our{" "}
+//             <Link href="/terms" className="underline hover:text-gray-600 dark:hover:text-gray-300">Terms</Link>
+//             {" "}&amp;{" "}
+//             <Link href="/privacy" className="underline hover:text-gray-600 dark:hover:text-gray-300">Privacy</Link>
+//           </p>
+//         </div>
+
+//       </div>
+//     </div>
+//   );
+// }
+  
+  
+
 

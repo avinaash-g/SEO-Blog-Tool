@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
+// Clean, syntax-error-free Metadata object
 export const metadata: Metadata = {
   title: "Toolverse",
   description: "Online Web Tools",
@@ -26,3 +27,32 @@ export default function RootLayout({
     </html>
   );
 }
+
+// import type { Metadata } from "next";
+// import { ThemeProvider } from "next-themes";
+// import "./globals.css";
+
+// export const metadata: Metadata = {
+//   title: "Toolverse",
+//   description: "Online Web Tools",
+// };
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <html lang="en" suppressHydrationWarning>
+//       <body>
+//         <ThemeProvider
+//           attribute="class"
+//           defaultTheme="light"
+//           enableSystem={false}
+//         >
+//           {children}
+//         </ThemeProvider>
+//       </body>
+//     </html>
+//   );
+// }

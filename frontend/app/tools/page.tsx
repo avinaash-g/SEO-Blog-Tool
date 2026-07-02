@@ -1,113 +1,169 @@
-// "use client";
+'use client'
 
-// import { useState } from "react";
-// import Link from "next/link";
-// import Navbar from "@/components/Landingpage/Navbar";
-// import Footer from "@/components/Landingpage/Footer";
-// import ToolCard from "@/components/Landingpage/ToolCard";
-// //import { TOOL_DETAILS } from "@/data/toolDetailData";
+import { useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+ import Navbar from '@/components/Landingpage/Navbar'
+import Footer from '@/components/Landingpage/Footer'
 
-// export default function ToolsPage() {
-//   const [search, setSearch] = useState("");
-//   const [activeCategory, setActiveCategory] = useState("All");
+interface ToolItem {
+  name: string
+  slug: string
+  category: 'Finance' | 'Utility' | 'Developer' | 'Text'
+  desc: string
+  icon: string
+  tags: string[]
+}
 
-//   // Dynamically extract categories from the raw dataset array list
-//   const categories = [
-//     "All",
-//     ...Array.from(new Set(TOOL_DETAILS.map((tool) => tool.category)))
-//   ];
+const ALL_TOOLS: ToolItem[] = [
+  { name: 'EMI Calculator', slug: 'emi-calculator', category: 'Finance', desc: 'Calculate monthly loan EMIs based on loan amount, interest rate, and tenure.', icon: '📊', tags: ['loan', 'emi', 'interest'] },
+  { name: 'SIP Calculator', slug: 'sip-calculator', category: 'Finance', desc: 'Estimate the future returns of your systematic investment plans (SIP) over selected years.', icon: '📈', tags: ['investment', 'sip', 'wealth'] },
+  { name: 'GST Calculator', slug: 'gst-calculator', category: 'Finance', desc: 'Quickly add or remove GST from an original amount using standard percentages.', icon: '💰', tags: ['tax', 'gst', 'finance'] },
+  { name: 'FD Calculator', slug: 'fd-calculator', category: 'Finance', desc: 'Compute fixed deposit maturity amounts using principal, rate, tenure, and compounding intervals.', icon: '🏦', tags: ['savings', 'maturity', 'deposit'] },
+  { name: 'Loan Calculator', slug: 'loan-calculator', category: 'Finance', desc: 'Analyze full loan breakdowns featuring principal, rates, and complete amortization tables.', icon: '💵', tags: ['amortization', 'mortgage', 'finance'] },
 
-//   // Robust combination filtering framework matching both search parameters and active pills
-//   const filteredTools = TOOL_DETAILS.filter((tool) => {
-//     const matchesSearch = tool.name.toLowerCase().includes(search.toLowerCase()) ||
-//                           tool.seoDescription?.toLowerCase().includes(search.toLowerCase());
-//     const matchesCategory = activeCategory === "All" || tool.category === activeCategory;
-//     return matchesSearch && matchesCategory;
-//   });
+  { name: 'Age Calculator', slug: 'age-calculator', category: 'Utility', desc: 'Convert your date of birth to current age precise down to years, months, and days.', icon: '📅', tags: ['age', 'birthday', 'utility'] },
+  { name: 'Percentage Calculator', slug: 'percentage-calculator', category: 'Utility', desc: 'Find percentages, discover X% of Y, or quickly evaluate percentage changes.', icon: '🔢', tags: ['math', 'percentage', 'utility'] },
+  { name: 'Discount Calculator', slug: 'discount-calculator', category: 'Utility', desc: 'Input original price and discount percentage to instantly reveal the final bargain price.', icon: '🏷️', tags: ['shopping', 'discount', 'sale'] },
+  { name: 'QR Code Generator', slug: 'qr-generator', category: 'Utility', desc: 'Generate instantly scannable high-resolution QR codes from any custom text or URL layout.', icon: '📱', tags: ['qr', 'utility', 'marketing'] },
+  { name: 'Password Generator', slug: 'password-generator', category: 'Utility', desc: 'Create secure cryptographic passwords with customizable lengths, symbols, numbers, and an interactive strength meter.', icon: '🔑', tags: ['security', 'password', 'safe'] },
 
-//   return (
-//     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-200">
-//       <Navbar />
+  { name: 'JSON Formatter', slug: 'json-formatter', category: 'Developer', desc: 'Cleanly format, validate structure blocks, parse syntax flags, and minify raw JSON data.', icon: '💻', tags: ['json', 'developer', 'minify'] },
+  { name: 'Base64 Encoder/Decoder', slug: 'base64-converter', category: 'Developer', desc: 'Safely encode plain text strings into Base64 formats or decode them back to standard character layouts.', icon: '🔐', tags: ['base64', 'encode', 'strings'] },
+  { name: 'JWT Decoder', slug: 'jwt-decoder', category: 'Developer', desc: 'Decode local JSON Web Tokens client-side to instantly inspect header information and payload data.', icon: '🪙', tags: ['jwt', 'auth', 'token'] },
+  { name: 'UUID Generator', slug: 'uuid-generator', category: 'Developer', desc: 'Generate cryptographically secure version-4 UUID sequences individually or using bulk generation layouts.', icon: '🆔', tags: ['uuid', 'guid', 'id'] },
+  { name: 'Regex Tester', slug: 'regex-tester', category: 'Developer', desc: 'Input string patterns to validate configurations with matching syntax highlights in real time.', icon: '🔍', tags: ['regex', 'pattern', 'test'] },
 
-//       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 md:py-16">
-        
-//         {/* Page Typography Heading block */}
-//         <div className="mb-10">
-//           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-//             Explore Tools
-//           </h1>
-//           <p className="text-sm md:text-base text-slate-600 dark:text-zinc-400 mt-2 max-w-xl">
-//             Access our free library of professional utilities built for speed, accuracy, and absolute user data privacy.
-//           </p>
-//         </div>
+  { name: 'Word Counter', slug: 'word-counter', category: 'Text', desc: 'Count words, individual characters, total sentence breaks, and formatting paragraphs live.', icon: '✍️', tags: ['text', 'count', 'editor'] },
+  { name: 'Character Counter', slug: 'character-counter', category: 'Text', desc: 'Examine detailed character metrics calculated natively both with and without white spaces included.', icon: '🔠', tags: ['character', 'letters', 'length'] },
+  { name: 'Case Converter', slug: 'case-converter', category: 'Text', desc: 'Transform text blocks cleanly between UPPERCASE, lowercase, Title Case, and Sentence case patterns.', icon: '🔤', tags: ['string', 'case', 'format'] },
+  { name: 'Text Reverser', slug: 'text-reverser', category: 'Text', desc: 'Reverse complete input arrays or flip text strings backward by switching individual letters or entire words.', icon: '🔄', tags: ['reverse', 'flip', 'manipulate'] },
+  { name: 'Slug Generator', slug: 'slug-generator', category: 'Text', desc: 'Convert standard text strings into URL-friendly strings clean of unauthorized characters.', icon: '🔗', tags: ['slug', 'seo', 'url'] }
+]
 
-//         {/* Improved Search Bar Layout Component Container */}
-//         <div className="mb-8 relative max-w-2xl">
-//           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 dark:text-zinc-500">
-//             <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-//               <circle cx="11" cy="11" r="8" />
-//               <path d="m21 21-4.3-4.3" />
-//             </svg>
-//           </div>
-//           <input
-//             type="text"
-//             placeholder="Search tools... (e.g. JSON Formatter, Base64)"
-//             value={search}
-//             onChange={(e) => setSearch(e.target.value)}
-//             className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#0d0e12] text-slate-900 dark:text-white rounded-xl border border-slate-200 dark:border-white/5 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-violet-600/50 dark:focus:border-[#A6FF5D]/50 focus:ring-1 focus:ring-violet-600/30 dark:focus:ring-[#A6FF5D]/30 transition-all duration-200 text-sm shadow-xs"
-//           />
-//         </div>
+const CATEGORIES = ['All', 'Finance', 'Utility', 'Developer', 'Text'] as const
 
-//         {/* Dynamic Category Interactive Pill Filters Layout Row */}
-//         <div className="flex flex-wrap gap-2.5 mb-10 border-b border-slate-200 dark:border-white/5 pb-6">
-//           {categories.map((cat) => {
-//             const isSelected = activeCategory === cat;
-//             return (
-//               <button
-//                 key={cat}
-//                 onClick={() => setActiveCategory(cat)}
-//                 className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 border cursor-pointer ${
-//                   isSelected
-//                     ? "bg-violet-600 text-white border-violet-600 dark:bg-[#A6FF5D] dark:text-gray-900 dark:border-[#A6FF5D] shadow-xs dark:shadow-[0_0_15px_rgba(166,255,93,0.15)]"
-//                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 dark:bg-[#0d0e12] dark:text-zinc-400 dark:border-white/5 dark:hover:border-white/10 dark:hover:text-white"
-//                 }`}
-//               >
-//                 {cat}
-//               </button>
-//             );
-//           })}
-//         </div>
+export default function ToolsListingPage() {
+  const searchParams = useSearchParams()
+  const searchQuery = searchParams.get('q')?.toLowerCase() ?? ''
+  const [activeCategory, setActiveCategory] = useState<typeof CATEGORIES[number]>('All')
 
-//         {/* Main Tools Result Grid Panel */}
-//         {filteredTools.length === 0 ? (
-//           <div className="text-center py-20 bg-white dark:bg-[#0d0e12] rounded-2xl border border-slate-200 dark:border-white/5 border-dashed shadow-xs">
-//             <svg className="mx-auto text-slate-400 dark:text-zinc-600 mb-4" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-//               <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
-//             </svg>
-//             <h3 className="text-lg font-semibold text-slate-800 dark:text-zinc-200">No matching tools found</h3>
-//             <p className="text-sm text-slate-500 dark:text-zinc-500 mt-1 max-w-xs mx-auto">
-//               Try checking your spelling or selecting an alternative tool category filter option.
-//             </p>
-//           </div>
-//         ) : (
-//           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-in fade-in duration-300">
-//             {filteredTools.map((tool) => (
-//               <ToolCard 
-//                 key={tool.slug} 
-//                 tool={{
-//                   name: tool.name,
-//                   slug: tool.slug,
-//                   description: tool.seoDescription || "",
-//                   category: tool.category,
-//                   icon: <span className="leading-none text-xl">{tool.icon || "🛠️"}</span>
-//                 }} 
-//               />
-//             ))}
-//           </div>
-//         )}
-//       </main>
+  const filteredTools = useMemo(() => {
+    return ALL_TOOLS.filter((tool) => {
+      const matchesCategory = activeCategory === 'All' || tool.category === activeCategory
+      const matchesSearch =
+        tool.name.toLowerCase().includes(searchQuery) ||
+        tool.desc.toLowerCase().includes(searchQuery) ||
+        tool.tags.some((tag) => tag.toLowerCase().includes(searchQuery))
 
-//       <Footer />
-//     </div>
-//   );
-// }
+      return matchesCategory && matchesSearch
+    })
+  }, [activeCategory, searchQuery])
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-[#000000]">
+      <Navbar />
+
+      <main className="w-full flex-grow bg-transparent px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-10 text-center sm:text-left">
+            <h1 className="font-['Sora'] text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+              All Online Tools
+            </h1>
+            <p className="mt-2 max-w-2xl text-base text-slate-500 dark:text-slate-400">
+              Explore our ecosystem of 20 zero-friction utilities. Safe client-side execution with zero subscription costs.
+            </p>
+            {searchQuery && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-sm text-teal-700 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-400">
+                <span>
+                  Showing search results for: <strong>{searchQuery}</strong>
+                </span>
+                <Link href="/tools" className="ml-1 font-bold hover:text-teal-900 dark:hover:text-teal-200">
+                  ×
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-8 flex flex-wrap gap-2 border-b border-slate-200 pb-5 dark:border-slate-800">
+            {CATEGORIES.map((cat) => {
+              const isActive = activeCategory === cat
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-violet-700 text-white shadow-sm dark:bg-[#A6FF5D] dark:text-slate-900'
+                      : 'border border-slate-200 bg-white text-slate-600 hover:border-violet-500 hover:text-violet-700 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:border-[#A6FF5D] dark:hover:text-[#A6FF5D]'
+                  }`}
+                >
+                  {cat === 'All' ? 'All Tools' : cat === 'Text' ? `${cat} Tools` : cat}
+                </button>
+              )
+            })}
+          </div>
+
+          {filteredTools.length > 0 ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredTools.map((tool) => {
+                const isGreenHighlight = tool.slug === 'password-generator' || tool.slug === 'gst-calculator'
+
+                return (
+                  <Link
+                    href={`/tools/${tool.slug}`}
+                    key={tool.slug}
+                    className={`group flex flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-500 hover:shadow-md dark:bg-slate-900/55 dark:bg-none dark:shadow-none ${
+                      isGreenHighlight
+                        ? 'border-[#A6FF5D]/60 dark:border-[#A6FF5D]/35 dark:hover:border-[#A6FF5D]'
+                        : 'border-slate-200/80 dark:border-white/10 dark:hover:border-[#A6FF5D]'
+                    }`}
+                  >
+                    <div>
+                      <div className="mb-4 inline-flex rounded-xl bg-slate-50 p-3 text-2xl transition-colors group-hover:bg-violet-50 dark:bg-slate-800/70 dark:group-hover:bg-slate-800">
+                        {tool.icon}
+                      </div>
+
+                      <h3
+                        className={`mb-1.5 text-lg font-bold text-slate-900 transition-colors dark:text-white ${
+                          isGreenHighlight ? 'dark:text-[#A6FF5D]' : 'group-hover:text-violet-700 dark:group-hover:text-[#A6FF5D]'
+                        }`}
+                      >
+                        {tool.name}
+                      </h3>
+
+                      <p className="mb-4 line-clamp-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                        {tool.desc}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3 dark:border-white/10">
+                      {tool.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center dark:border-slate-800 dark:bg-slate-900/40">
+              <svg className="mx-auto mb-3 h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">No tools match your criteria</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Try adjusting your category filters or clearing the search query.</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
